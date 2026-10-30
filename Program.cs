@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortHub.API.Data;
+using PortHub.API.Middlewares;
+using PortHub.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +12,13 @@ builder.Services.AddDbContext<PortHubDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<AeroLinkClient>();
 
 var app = builder.Build();
+
+// Middlewares globales
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
