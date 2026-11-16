@@ -3,6 +3,7 @@ using PortHub.API.Context;
 using PortHub.API.Middlewares;
 using PortHub.API.Services;
 using Microsoft.OpenApi;
+using PortHub.API.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<PortHubDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configuración de Swagger con el botón Authorize

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PortHub.API.Context;
 using PortHub.API.DTOs;
-using PortHub.API.Models;
+using PortHub.API.Interfaces;
 
 namespace PortHub.API.Controllers;
 
@@ -10,89 +8,42 @@ namespace PortHub.API.Controllers;
 [Route("api/[controller]")]
 public class AerolineasController : ControllerBase
 {
-    private readonly PortHubDbContext _context;
+    private readonly IAerolineaService _aerolineaService;
 
-    public AerolineasController(PortHubDbContext context)
+    public AerolineasController(IAerolineaService aerolineaService)
     {
-        _context = context;
+        _aerolineaService = aerolineaService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AerolineaResponseDto>>> GetAll()
     {
-        var aerolineas = await _context.Aerolineas
-            .Select(a => new AerolineaResponseDto
-            {
-                Id = a.Id,
-                Nombre = a.Nombre,
-                Codigo = a.Codigo,
-                Pais = a.Pais,
-                DireccionBase = a.DireccionBase
-            })
-            .ToListAsync();
-
-        return Ok(aerolineas);
+        return Ok(await _aerolineaService.ObtenerTodasAsync());
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<AerolineaResponseDto>> GetById(int id)
     {
-        var a = await _context.Aerolineas.FindAsync(id);
-        if (a == null) return NotFound();
-
-        return Ok(new AerolineaResponseDto
-        {
-            Id = a.Id,
-            Nombre = a.Nombre,
-            Codigo = a.Codigo,
-            Pais = a.Pais,
-            DireccionBase = a.DireccionBase
-        });
+        var aerolinea = await _aerolineaService.ObtenerPorIdAsync(id);
+        if (aerolinea == null) return NotFound();
+        return Ok(aerolinea);
     }
 
     [HttpPost]
     public async Task<ActionResult<AerolineaResponseDto>> Create(CrearAerolineaDto dto)
     {
-        var existeCodigo = await _context.Aerolineas.AnyAsync(a => a.Codigo == dto.Codigo);
-        if (existeCodigo)
-        {
+        if (await _aerolineaService.ExisteCodigoAsync(dto.Codigo))
             return Conflict(new { message = "Ya existe una aerolínea con ese código." });
-        }
 
-        var aerolinea = new Aerolinea
-        {
-            Nombre = dto.Nombre,
-            Codigo = dto.Codigo.ToUpper(),
-            Pais = dto.Pais,
-            DireccionBase = dto.DireccionBase
-        };
-
-        _context.Aerolineas.Add(aerolinea);
-        await _context.SaveChangesAsync();
-
-        var response = new AerolineaResponseDto
-        {
-            Id = aerolinea.Id,
-            Nombre = aerolinea.Nombre,
-            Codigo = aerolinea.Codigo,
-            Pais = aerolinea.Pais,
-            DireccionBase = aerolinea.DireccionBase
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = aerolinea.Id }, response);
+        var creada = await _aerolineaService.CrearAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = creada.Id }, creada);
     }
 
     [HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, ActualizarAerolineaDto dto)
-{
-    var aerolinea = await _context.Aerolineas.FindAsync(id);
-    if (aerolinea == null) return NotFound();
-
-    aerolinea.Nombre = dto.Nombre;
-    aerolinea.Pais = dto.Pais;
-    aerolinea.DireccionBase = dto.DireccionBase;
-
-    await _context.SaveChangesAsync();
-    return NoContent();
-}
+    public async Task<IActionResult> Update(int id, ActualizarAerolineaDto dto)
+    {
+        var actualizado = await _aerolineaService.ActualizarAsync(id, dto);
+        if (!actualizado) return NotFound();
+        return NoContent();
+    }
 }
