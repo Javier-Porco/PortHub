@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using PortHub.API.DTOs;
 using PortHub.API.Interfaces;
+using PortHub.API.Filters;
 
 namespace PortHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiKey]
 public class AerolineasController : ControllerBase
 {
     private readonly IAerolineaService _aerolineaService;

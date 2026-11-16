@@ -40,7 +40,6 @@ var app = builder.Build();
 
 // Middlewares globales
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseMiddleware<ApiKeyMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using PortHub.API.Interfaces;
+using PortHub.API.Filters;
 
 namespace PortHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiKey]
 public class VuelosController : ControllerBase
 {
     private readonly ISlotService _slotService;
