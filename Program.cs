@@ -5,12 +5,12 @@ using PortHub.API.Services;
 using Microsoft.OpenApi;
 using PortHub.API.Interfaces;
 
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar DbContext con SQLite
-builder.Services.AddDbContext<PortHubDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddDbContext<PortHubDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
 builder.Services.AddScoped<ISlotService, SlotDbService>();
