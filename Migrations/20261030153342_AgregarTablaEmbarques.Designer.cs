@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PortHub.API.Data;
+using PortHub.API.Context;
 
 #nullable disable
 
@@ -20,7 +20,7 @@ namespace PortHub.API.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
-            modelBuilder.Entity("PortHub.API.Domain.Entities.Aerolinea", b =>
+            modelBuilder.Entity("PortHub.API.Models.Aerolinea", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +50,7 @@ namespace PortHub.API.Migrations
                     b.ToTable("Aerolineas");
                 });
 
-            modelBuilder.Entity("PortHub.API.Domain.Entities.Embarque", b =>
+            modelBuilder.Entity("PortHub.API.Models.Embarque", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -72,7 +72,7 @@ namespace PortHub.API.Migrations
                     b.ToTable("Embarques");
                 });
 
-            modelBuilder.Entity("PortHub.API.Domain.Entities.Slot", b =>
+            modelBuilder.Entity("PortHub.API.Models.Slot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

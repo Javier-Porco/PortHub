@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using PortHub.API.Domain.Enums;
 
-namespace PortHub.API.Domain.DTOs;
+namespace PortHub.API.DTOs;
 
 public class SolicitudSlotDto
 {

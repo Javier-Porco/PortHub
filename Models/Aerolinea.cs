@@ -1,4 +1,4 @@
-namespace PortHub.API.Domain.Entities;
+namespace PortHub.API.Models;
 
 public class Aerolinea
 {

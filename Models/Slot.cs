@@ -1,6 +1,6 @@
-using PortHub.API.Domain.Enums;
+using PortHub.API.Models;
 
-namespace PortHub.API.Domain.Entities;
+namespace PortHub.API.Models;
 
 public class Slot
 {

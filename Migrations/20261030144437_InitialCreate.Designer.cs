@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PortHub.API.Data;
+using PortHub.API.Context;
 
 #nullable disable
 
@@ -19,7 +19,7 @@ namespace PortHub.API.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
-            modelBuilder.Entity("PortHub.API.Domain.Entities.Aerolinea", b =>
+            modelBuilder.Entity("PortHub.API.Models.Aerolinea", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

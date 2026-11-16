@@ -1,15 +1,16 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using PortHub.API.Domain.DTOs;
+using PortHub.API.DTOs;
+using PortHub.API.Interfaces;
 
 namespace PortHub.API.Services;
 
-public class AeroLinkClient
+public class AeroLinkService : IAeroLinkService
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
 
-    public AeroLinkClient(HttpClient httpClient, IConfiguration configuration)
+    public AeroLinkService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _configuration = configuration;
