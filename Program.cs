@@ -33,7 +33,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddHttpClient<AeroLinkClient>();
+builder.Services.AddScoped<IEmbarqueService, EmbarqueDbService>();
+builder.Services.AddHttpClient<IAeroLinkService, AeroLinkService>();
 
 var app = builder.Build();
 
