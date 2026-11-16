@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PortHub.API.Domain.DTOs;
+namespace PortHub.API.DTOs;
 
 public class CrearAerolineaDto
 {

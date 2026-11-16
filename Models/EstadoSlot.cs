@@ -1,4 +1,4 @@
-namespace PortHub.API.Domain.Enums;
+namespace PortHub.API.Models;
 
 public enum EstadoSlot
 {

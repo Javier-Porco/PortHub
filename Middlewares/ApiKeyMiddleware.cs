@@ -1,5 +1,5 @@
 using System.Text.Json;
-using PortHub.API.Domain.DTOs;
+using PortHub.API.DTOs;
 
 namespace PortHub.API.Middlewares;
 

@@ -1,6 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using PortHub.API.Domain.DTOs;
+using PortHub.API.DTOs;
 
 namespace PortHub.API.Services;
 

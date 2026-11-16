@@ -1,4 +1,4 @@
-namespace PortHub.API.Domain.DTOs;
+namespace PortHub.API.DTOs;
 
 public class ErrorResponseDto
 {

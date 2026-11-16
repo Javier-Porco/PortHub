@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PortHub.API.Data;
-using PortHub.API.Domain.DTOs;
-using PortHub.API.Domain.Entities;
+using PortHub.API.Context;
+using PortHub.API.DTOs;
+using PortHub.API.Models;
 using PortHub.API.Services;
 
 namespace PortHub.API.Controllers;

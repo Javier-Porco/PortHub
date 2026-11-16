@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using PortHub.API.Domain.Entities;
+using PortHub.API.Models;
 
-namespace PortHub.API.Data;
+namespace PortHub.API.Context;
 
 public class PortHubDbContext : DbContext
 {
