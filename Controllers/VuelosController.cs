@@ -1,9 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PortHub.API.Context;
-using PortHub.API.DTOs;
-using PortHub.API.Models;
-using PortHub.API.Services;
+using PortHub.API.Interfaces;
 
 namespace PortHub.API.Controllers;
 
@@ -11,31 +7,26 @@ namespace PortHub.API.Controllers;
 [Route("api/[controller]")]
 public class VuelosController : ControllerBase
 {
-    private readonly PortHubDbContext _context;
+    private readonly ISlotService _slotService;
 
-    public VuelosController(PortHubDbContext context)
+    public VuelosController(ISlotService slotService)
     {
-        _context = context;
+        _slotService = slotService;
     }
 
-    // Desafío Adicional: Consulta unificada combinando datos de ambas APIs
     [HttpGet]
     public async Task<IActionResult> GetVuelosCombinados()
     {
-        // 1. Obtenemos los slots locales registrados en PortHub
-        var slotsLocales = await _context.Slots
-            .Where(s => s.Estado != EstadoSlot.Liberado)
-            .ToListAsync();
+        var slots = await _slotService.ObtenerActivosAsync();
 
-        // 2. Mapeamos la lista combinando los datos operativos del aeropuerto
-        var resultado = slotsLocales.Select(s => new
+        var resultado = slots.Select(s => new
         {
             codigoVuelo = s.CodigoVuelo,
             codigoAerolinea = s.CodigoAerolinea,
             horarioProgramado = s.HorarioProgramado,
             pistaAsignada = s.Pista,
             gateAsignado = s.Gate,
-            estadoSlot = s.Estado.ToString().ToLower()
+            estadoSlot = s.Estado
         });
 
         return Ok(resultado);

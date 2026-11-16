@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PortHub.API.Context;
 using PortHub.API.DTOs;
-using PortHub.API.Models;
+using PortHub.API.Interfaces;
 
 namespace PortHub.API.Controllers;
 
@@ -10,41 +8,24 @@ namespace PortHub.API.Controllers;
 [Route("api/[controller]")]
 public class SlotsController : ControllerBase
 {
-    private readonly PortHubDbContext _context;
+    private readonly ISlotService _slotService;
 
-    public SlotsController(PortHubDbContext context)
+    public SlotsController(ISlotService slotService)
     {
-        _context = context;
+        _slotService = slotService;
     }
 
-    // 1. Consultar disponibilidad de slot
     [HttpGet("disponibilidad")]
     public async Task<IActionResult> ConsultarDisponibilidad([FromQuery] int pista, [FromQuery] DateTime horario)
     {
-        var ocupado = await _context.Slots
-            .AnyAsync(s => s.Pista == pista 
-                        && s.HorarioProgramado == horario 
-                        && s.Estado != EstadoSlot.Liberado);
-
-        return Ok(new
-        {
-            disponible = !ocupado,
-            pista = pista,
-            horario = horario
-        });
+        var disponible = await _slotService.EstaDisponibleAsync(pista, horario);
+        return Ok(new { disponible, pista, horario });
     }
 
-    // 2. Solicitar reserva de slot
     [HttpPost("solicitudes")]
     public async Task<ActionResult<SlotResponseDto>> SolicitarSlot(SolicitudSlotDto dto)
     {
-        // Validar que la pista no esté ocupada en ese horario
-        var existeConflicto = await _context.Slots
-            .AnyAsync(s => s.Pista == dto.Pista 
-                        && s.HorarioProgramado == dto.HorarioProgramado 
-                        && s.Estado != EstadoSlot.Liberado);
-
-        if (existeConflicto)
+        if (!await _slotService.EstaDisponibleAsync(dto.Pista, dto.HorarioProgramado))
         {
             return Conflict(new ErrorResponseDto
             {
@@ -54,40 +35,14 @@ public class SlotsController : ControllerBase
             });
         }
 
-        var slot = new Slot
-        {
-            CodigoVuelo = dto.CodigoVuelo,
-            CodigoAerolinea = dto.CodigoAerolinea,
-            HorarioProgramado = dto.HorarioProgramado,
-            Pista = dto.Pista,
-            Gate = dto.Gate,
-            Estado = EstadoSlot.Reservado
-        };
-
-        _context.Slots.Add(slot);
-        await _context.SaveChangesAsync();
-
-        var response = new SlotResponseDto
-        {
-            Id = slot.Id,
-            CodigoVuelo = slot.CodigoVuelo,
-            CodigoAerolinea = slot.CodigoAerolinea,
-            HorarioProgramado = slot.HorarioProgramado,
-            Pista = slot.Pista,
-            Gate = slot.Gate,
-            Estado = slot.Estado.ToString().ToLower()
-        };
-
-        return CreatedAtAction(nameof(GetByCodigoVuelo), new { codigoVuelo = slot.CodigoVuelo }, response);
+        var slot = await _slotService.ReservarAsync(dto);
+        return CreatedAtAction(nameof(GetByCodigoVuelo), new { codigoVuelo = slot.CodigoVuelo }, slot);
     }
 
-    // 3. Notificar cancelación (Liberar slot)
     [HttpPost("cancelaciones")]
     public async Task<IActionResult> CancelarSlot(CancelacionSlotDto dto)
     {
-        var slot = await _context.Slots
-            .FirstOrDefaultAsync(s => s.CodigoVuelo == dto.CodigoVuelo && s.Estado != EstadoSlot.Liberado);
-
+        var slot = await _slotService.LiberarAsync(dto.CodigoVuelo);
         if (slot == null)
         {
             return NotFound(new ErrorResponseDto
@@ -98,37 +53,19 @@ public class SlotsController : ControllerBase
             });
         }
 
-        slot.Estado = EstadoSlot.Liberado;
-        await _context.SaveChangesAsync();
-
         return Ok(new
         {
             mensaje = "Slot liberado correctamente",
             codigoVuelo = slot.CodigoVuelo,
-            estado = slot.Estado.ToString().ToLower()
+            estado = slot.Estado
         });
     }
 
-    // 4. Obtener slot por código de vuelo (Para el Desafío Adicional)
     [HttpGet]
     public async Task<ActionResult<SlotResponseDto>> GetByCodigoVuelo([FromQuery] string codigoVuelo)
     {
-        var slot = await _context.Slots
-            .Where(s => s.CodigoVuelo == codigoVuelo)
-            .OrderByDescending(s => s.FechaCreacion)
-            .FirstOrDefaultAsync();
-
+        var slot = await _slotService.ObtenerPorCodigoVueloAsync(codigoVuelo);
         if (slot == null) return NotFound();
-
-        return Ok(new SlotResponseDto
-        {
-            Id = slot.Id,
-            CodigoVuelo = slot.CodigoVuelo,
-            CodigoAerolinea = slot.CodigoAerolinea,
-            HorarioProgramado = slot.HorarioProgramado,
-            Pista = slot.Pista,
-            Gate = slot.Gate,
-            Estado = slot.Estado.ToString().ToLower()
-        });
+        return Ok(slot);
     }
 }

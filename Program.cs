@@ -13,6 +13,7 @@ builder.Services.AddDbContext<PortHubDbContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
+builder.Services.AddScoped<ISlotService, SlotDbService>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configuración de Swagger con el botón Authorize
