@@ -1,5 +1,4 @@
-using System.Net;
-using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using PortHub.API.DTOs;
 
 namespace PortHub.API.Middlewares;
@@ -23,26 +22,32 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ocurrió un error no controlado en el servidor.");
-            await HandleExceptionAsync(context, ex);
+            // El detalle completo va SOLO al log (la consola donde corre la API), nunca al cliente.
+            _logger.LogError(ex, "Error no controlado en {Metodo} {Ruta}", context.Request.Method, context.Request.Path);
+
+            // Si ya se empezó a mandar la respuesta, no se puede cambiar el status: se relanza.
+            if (context.Response.HasStarted) throw;
+
+            var (status, error) = ex switch
+            {
+                // La base rechazó el dato (por ejemplo, un índice único): es un conflicto, no un error del servidor.
+                DbUpdateException => (StatusCodes.Status409Conflict, new ErrorResponseDto
+                {
+                    Code = "CONFLICT",
+                    Message = "La operación entra en conflicto con datos existentes.",
+                    Details = "Revise que no esté duplicando un registro."
+                }),
+                _ => (StatusCodes.Status500InternalServerError, new ErrorResponseDto
+                {
+                    Code = "INTERNAL_SERVER_ERROR",
+                    Message = "Ha ocurrido un error interno en el servidor del aeropuerto.",
+                    Details = "Intente nuevamente más tarde."
+                })
+            };
+
+            context.Response.Clear();
+            context.Response.StatusCode = status;
+            await context.Response.WriteAsJsonAsync(error);
         }
-    }
-
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
-        context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-        var errorResponse = new ErrorResponseDto
-        {
-            Code = "INTERNAL_SERVER_ERROR",
-            Message = "Ha ocurrido un error interno en el servidor del aeropuerto.",
-            Details = exception.Message
-        };
-
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var json = JsonSerializer.Serialize(errorResponse, options);
-
-        return context.Response.WriteAsync(json);
     }
 }
