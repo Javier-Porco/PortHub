@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PortHub.API.DTOs;
 
@@ -22,6 +23,7 @@ public class SolicitudSlotDto
 
 public class SlotResponseDto
 {
+    [JsonPropertyName("slotId")]
     public Guid Id { get; set; }
     public string CodigoVuelo { get; set; } = string.Empty;
     public string CodigoAerolinea { get; set; } = string.Empty;

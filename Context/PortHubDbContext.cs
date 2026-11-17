@@ -24,6 +24,11 @@ public class PortHubDbContext : DbContext
             .HasIndex(s => new { s.Pista, s.HorarioProgramado })
             .IsUnique()
             .HasFilter("\"Estado\" <> 2");
+
+        // Fechas siempre en UTC: al guardar se pasan a UTC, y al leer se marcan como UTC (salen con "Z").
+        modelBuilder.Entity<Slot>()
+            .Property(s => s.HorarioProgramado)
+            .HasConversion(v => v.ToUniversalTime(), v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
     }
     public DbSet<Embarque> Embarques => Set<Embarque>();
 }
