@@ -22,7 +22,8 @@ public class PortHubDbContext : DbContext
         // Criterio de Aceptación: Ningún slot podrá asignarse a más de un vuelo en el mismo horario y pista
         modelBuilder.Entity<Slot>()
             .HasIndex(s => new { s.Pista, s.HorarioProgramado })
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("\"Estado\" <> 2");
     }
     public DbSet<Embarque> Embarques => Set<Embarque>();
 }

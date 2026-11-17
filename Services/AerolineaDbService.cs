@@ -25,7 +25,7 @@ public class AerolineaDbService(PortHubDbContext context) : IAerolineaService
     public async Task<bool> ExisteCodigoAsync(string codigo)
     {
         // Bug M1 de la revisión (mayúsculas): se corrige acá después de la reestructura.
-        return await _context.Aerolineas.AnyAsync(a => a.Codigo == codigo);
+        return await _context.Aerolineas.AnyAsync(a => a.Codigo == codigo.Trim().ToUpper());
     }
 
     public async Task<AerolineaResponseDto> CrearAsync(CrearAerolineaDto dto)
@@ -33,7 +33,7 @@ public class AerolineaDbService(PortHubDbContext context) : IAerolineaService
         var aerolinea = new Aerolinea
         {
             Nombre = dto.Nombre,
-            Codigo = dto.Codigo.ToUpper(),
+            Codigo = dto.Codigo.Trim().ToUpper(),
             Pais = dto.Pais,
             DireccionBase = dto.DireccionBase
         };

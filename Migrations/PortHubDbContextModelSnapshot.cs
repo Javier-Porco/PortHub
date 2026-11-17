@@ -15,7 +15,7 @@ namespace PortHub.API.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("PortHub.API.Models.Aerolinea", b =>
                 {
@@ -102,7 +102,8 @@ namespace PortHub.API.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Pista", "HorarioProgramado")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Estado\" <> 2");
 
                     b.ToTable("Slots");
                 });
