@@ -27,7 +27,13 @@ public class AerolineasController : ControllerBase
     public async Task<ActionResult<AerolineaResponseDto>> GetById(int id)
     {
         var aerolinea = await _aerolineaService.ObtenerPorIdAsync(id);
-        if (aerolinea == null) return NotFound();
+        if (aerolinea == null)
+            return NotFound(new ErrorResponseDto
+            {
+                Code = "AEROLINEA_NOT_FOUND",
+                Message = "No existe una aerolínea con ese id.",
+                Details = $"Id: {id}"
+            });
         return Ok(aerolinea);
     }
 
@@ -35,7 +41,12 @@ public class AerolineasController : ControllerBase
     public async Task<ActionResult<AerolineaResponseDto>> Create(CrearAerolineaDto dto)
     {
         if (await _aerolineaService.ExisteCodigoAsync(dto.Codigo))
-            return Conflict(new { message = "Ya existe una aerolínea con ese código." });
+            return Conflict(new ErrorResponseDto
+            {
+                Code = "AEROLINEA_DUPLICADA",
+                Message = "Ya existe una aerolínea con ese código.",
+                Details = $"Código: {dto.Codigo.Trim().ToUpper()}"
+            });
 
         var creada = await _aerolineaService.CrearAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = creada.Id }, creada);
@@ -45,7 +56,13 @@ public class AerolineasController : ControllerBase
     public async Task<IActionResult> Update(int id, ActualizarAerolineaDto dto)
     {
         var actualizado = await _aerolineaService.ActualizarAsync(id, dto);
-        if (!actualizado) return NotFound();
+        if (!actualizado)
+            return NotFound(new ErrorResponseDto
+            {
+                Code = "AEROLINEA_NOT_FOUND",
+                Message = "No existe una aerolínea con ese id.",
+                Details = $"Id: {id}"
+            });
         return NoContent();
     }
 }

@@ -67,7 +67,13 @@ public class SlotsController : ControllerBase
     public async Task<ActionResult<SlotResponseDto>> GetByCodigoVuelo([FromQuery] string codigoVuelo)
     {
         var slot = await _slotService.ObtenerPorCodigoVueloAsync(codigoVuelo);
-        if (slot == null) return NotFound();
+        if (slot == null)
+            return NotFound(new ErrorResponseDto
+            {
+                Code = "SLOT_NOT_FOUND",
+                Message = "No existe un slot para ese código de vuelo.",
+                Details = $"Vuelo: {codigoVuelo}"
+            });
         return Ok(slot);
     }
 }
