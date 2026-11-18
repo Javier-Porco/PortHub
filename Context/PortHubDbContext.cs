@@ -29,6 +29,11 @@ public class PortHubDbContext : DbContext
         modelBuilder.Entity<Slot>()
             .Property(s => s.HorarioProgramado)
             .HasConversion(v => v.ToUniversalTime(), v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+        // Un ticket solo puede registrarse una vez en el control de embarque.
+        modelBuilder.Entity<Embarque>()
+            .HasIndex(e => e.NumeroTicket)
+            .IsUnique();
     }
     public DbSet<Embarque> Embarques => Set<Embarque>();
 }

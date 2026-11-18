@@ -11,28 +11,47 @@ public class EmbarqueDbService(PortHubDbContext context, IAeroLinkService aeroLi
     private readonly PortHubDbContext _context = context;
     private readonly IAeroLinkService _aeroLink = aeroLink;
 
-    public async Task<EmbarqueResponseDto?> RegistrarAsync(RegistroEmbarqueDto dto)
+    public async Task<ResultadoRegistroEmbarque> RegistrarAsync(RegistroEmbarqueDto dto)
     {
-        // 1. Validar el ticket con AeroLink
-        var esValido = await _aeroLink.ValidarTicketAsync(dto.NumeroTicket);
-        if (!esValido) return null;
+        var ticket = dto.NumeroTicket.Trim();
 
-        // 2. Registrar el acceso
+        // 1. ¿Este ticket ya pasó por el control? Se revisa primero porque no necesita llamar a AeroLink.
+        if (await _context.Embarques.AnyAsync(e => e.NumeroTicket == ticket))
+            return Fallo(EstadoRegistroEmbarque.TicketYaUtilizado, $"El ticket {ticket} ya fue registrado.");
+
+        // 2. Validar el ticket con AeroLink. Si AeroLink no responde, sale una HttpRequestException
+        //    que maneja el controller (503).
+        var validacion = await _aeroLink.ValidarTicketAsync(ticket);
+        if (validacion == null || !validacion.EsValido)
+            return Fallo(EstadoRegistroEmbarque.TicketInvalido, $"AeroLink rechazó el ticket {ticket}.");
+
+        // 3. El vuelo del ticket tiene que tener un slot activo en el aeropuerto...
+        var slot = await _context.Slots.FirstOrDefaultAsync(s =>
+            s.CodigoVuelo == validacion.CodigoVuelo && s.Estado != EstadoSlot.Liberado);
+        if (slot == null)
+            return Fallo(EstadoRegistroEmbarque.VueloSinSlot,
+                $"El vuelo {validacion.CodigoVuelo} no tiene un slot activo en el aeropuerto.");
+
+        // ...y el pasajero tiene que estar en el gate de ese slot.
+        if (!string.Equals(slot.Gate, dto.Gate.Trim(), StringComparison.OrdinalIgnoreCase))
+            return Fallo(EstadoRegistroEmbarque.GateIncorrecto,
+                $"El vuelo {validacion.CodigoVuelo} embarca por el gate {slot.Gate}, no por {dto.Gate}.");
+
+        // 4. Todo bien: se registra el acceso.
         var embarque = new Embarque
         {
-            NumeroTicket = dto.NumeroTicket,
-            Gate = dto.Gate,
+            NumeroTicket = ticket,
+            CodigoVuelo = validacion.CodigoVuelo,
+            Gate = slot.Gate,
             HorarioAcceso = DateTime.UtcNow
         };
         _context.Embarques.Add(embarque);
         await _context.SaveChangesAsync();
 
-        return new EmbarqueResponseDto
+        return new ResultadoRegistroEmbarque
         {
-            Id = embarque.Id,
-            NumeroTicket = embarque.NumeroTicket,
-            Gate = embarque.Gate,
-            HorarioAcceso = embarque.HorarioAcceso
+            Estado = EstadoRegistroEmbarque.Registrado,
+            Embarque = ADto(embarque)
         };
     }
 
@@ -48,9 +67,22 @@ public class EmbarqueDbService(PortHubDbContext context, IAeroLinkService aeroLi
             {
                 Id = e.Id,
                 NumeroTicket = e.NumeroTicket,
+                CodigoVuelo = e.CodigoVuelo,
                 Gate = e.Gate,
                 HorarioAcceso = e.HorarioAcceso
             })
             .ToListAsync();
     }
+
+    private static ResultadoRegistroEmbarque Fallo(EstadoRegistroEmbarque estado, string detalle) =>
+        new() { Estado = estado, Detalle = detalle };
+
+    private static EmbarqueResponseDto ADto(Embarque e) => new()
+    {
+        Id = e.Id,
+        NumeroTicket = e.NumeroTicket,
+        CodigoVuelo = e.CodigoVuelo,
+        Gate = e.Gate,
+        HorarioAcceso = e.HorarioAcceso
+    };
 }
