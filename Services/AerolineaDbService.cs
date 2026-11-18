@@ -12,7 +12,7 @@ public class AerolineaDbService(PortHubDbContext context) : IAerolineaService
 
     public async Task<List<AerolineaResponseDto>> ObtenerTodasAsync()
     {
-        var aerolineas = await _context.Aerolineas.ToListAsync();
+        var aerolineas = await _context.Aerolineas.AsNoTracking().ToListAsync();
         return aerolineas.Select(ADto).ToList();
     }
 
@@ -24,7 +24,7 @@ public class AerolineaDbService(PortHubDbContext context) : IAerolineaService
 
     public async Task<bool> ExisteCodigoAsync(string codigo)
     {
-        // Bug M1 de la revisión (mayúsculas): se corrige acá después de la reestructura.
+        // El código se guarda en mayúsculas, así que se compara en mayúsculas ("arg" y "ARG" son la misma).
         return await _context.Aerolineas.AnyAsync(a => a.Codigo == codigo.Trim().ToUpper());
     }
 

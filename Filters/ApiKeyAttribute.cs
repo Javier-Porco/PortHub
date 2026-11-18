@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using PortHub.API.DTOs;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace PortHub.API.Filters;
 
@@ -18,7 +20,7 @@ public class ApiKeyAttribute : Attribute, IAuthorizationFilter
         var keyEsperada = config["ApiKey"];
         var header = context.HttpContext.Request.Headers[NombreHeader].ToString();
 
-        if (string.IsNullOrEmpty(keyEsperada) || !header.StartsWith(Prefijo) || header.Substring(Prefijo.Length).Trim() != keyEsperada)
+        if (string.IsNullOrEmpty(keyEsperada) || !header.StartsWith(Prefijo) || !SonIguales(header.Substring(Prefijo.Length).Trim(), keyEsperada))
         {
             context.Result = new UnauthorizedObjectResult(new ErrorResponseDto
             {
@@ -28,4 +30,7 @@ public class ApiKeyAttribute : Attribute, IAuthorizationFilter
             });
         }
     }
+    // Compara las dos claves tardando siempre lo mismo, para que no se pueda adivinar la clave midiendo tiempos.
+    private static bool SonIguales(string recibida, string esperada) =>
+        CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(recibida), Encoding.UTF8.GetBytes(esperada));
 }

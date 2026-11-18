@@ -67,6 +67,14 @@ builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
 
 var app = builder.Build();
 
+// Crea porthub.db si no existe y aplica las migraciones que falten.
+// Así nadie tiene que correr "dotnet ef database update" a mano.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PortHubDbContext>();
+    db.Database.Migrate();
+}
+
 // Middlewares globales
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // Cualquier error que salga sin cuerpo (404, 405, 415...) se completa con nuestro formato.
@@ -92,8 +100,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseStaticFiles();
-app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

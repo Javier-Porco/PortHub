@@ -79,6 +79,7 @@ public class SlotDbService(PortHubDbContext context, IAeroLinkService aeroLink) 
     public async Task<SlotResponseDto?> ObtenerPorCodigoVueloAsync(string codigoVuelo)
     {
         var slot = await _context.Slots
+            .AsNoTracking()
             .Where(s => s.CodigoVuelo == codigoVuelo)
             .OrderByDescending(s => s.FechaCreacion)
             .FirstOrDefaultAsync();
@@ -88,6 +89,7 @@ public class SlotDbService(PortHubDbContext context, IAeroLinkService aeroLink) 
     public async Task<List<SlotResponseDto>> ObtenerActivosAsync()
     {
         var slots = await _context.Slots
+        .AsNoTracking()
             .Where(s => s.Estado != EstadoSlot.Liberado)
             .ToListAsync();
         return slots.Select(ADto).ToList();

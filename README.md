@@ -17,7 +17,7 @@ API REST del aeropuerto para el Trabajo Integrador de Programación 2. Administr
    | `AeroLinkApi__BaseUrl` | URL base de la API de AeroLink, **terminada en `/`** (ej. `http://localhost:5099/`) |
    | `AeroLinkApi__ApiKey` | La clave que nos dio AeroLink |
 
-2. Si no existe `porthub.db`, crear la base: `dotnet ef database update`
+2. No hace falta crear la base: la primera vez que corrés la API se crea `porthub.db` con todas las migraciones.
 3. Correr: `dotnet run`
 
 | Qué | Dirección |
