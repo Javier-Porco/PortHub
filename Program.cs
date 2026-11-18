@@ -34,7 +34,14 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
             });
         };
     });
-builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
+
+// Cliente HTTP para llamar a AeroLink: URL base y API Key salen del .env, y espera como máximo 5 segundos.
+builder.Services.AddHttpClient<IAeroLinkService, AeroLinkService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["AeroLinkApi:BaseUrl"]!);
+    client.Timeout = TimeSpan.FromSeconds(5);
+    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("ApiKey", builder.Configuration["AeroLinkApi:ApiKey"]);
+});
 builder.Services.AddScoped<ISlotService, SlotDbService>();
 builder.Services.AddEndpointsApiExplorer();
 

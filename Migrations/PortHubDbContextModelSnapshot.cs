@@ -53,6 +53,10 @@ namespace PortHub.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CodigoVuelo")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Gate")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -65,6 +69,9 @@ namespace PortHub.API.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NumeroTicket")
+                        .IsUnique();
 
                     b.ToTable("Embarques");
                 });

@@ -1,44 +1,37 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
+using System.Net;
 using PortHub.API.DTOs;
 using PortHub.API.Interfaces;
 
 namespace PortHub.API.Services;
 
-public class AeroLinkService : IAeroLinkService
+public class AeroLinkService(HttpClient http) : IAeroLinkService
 {
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
+    // La URL base, la API Key y el timeout ya vienen configurados desde Program.cs.
+    private readonly HttpClient _http = http;
 
-    public AeroLinkService(HttpClient httpClient, IConfiguration configuration)
+    public async Task<ValidacionTicketAeroLinkDto?> ValidarTicketAsync(string codigoTicket)
     {
-        _httpClient = httpClient;
-        _configuration = configuration;
-    }
+        // EscapeDataString: el ticket va "encerrado" dentro de la URL y no puede cambiar la ruta (M7).
+        var url = $"api/tickets/{Uri.EscapeDataString(codigoTicket)}/validacion";
 
-    public async Task<bool> ValidarTicketAsync(string codigoTicket)
-    {
+        HttpResponseMessage response;
         try
         {
-            var baseUrl = _configuration.GetValue<string>("AeroLinkApi:BaseUrl") ?? "http://localhost:5000";
-            var apiKey = _configuration.GetValue<string>("AeroLinkApi:ApiKey") ?? "AeroLinkSecretKey2026";
-
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/api/tickets/{codigoTicket}/validacion");
-            request.Headers.Add("Authorization", $"ApiKey {apiKey}");
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode) return false;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<ValidacionTicketAeroLinkDto>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            return result?.EsValido ?? false;
+            response = await _http.GetAsync(url);
         }
-        catch
+        catch (TaskCanceledException ex)
         {
-            // Si AeroLink está caído o no responde, por seguridad el pasajero no aborda
-            return false;
+            // Pasaron los 5 segundos sin respuesta. Lo convertimos en HttpRequestException
+            // para que el controller tenga que manejar un solo tipo de error.
+            throw new HttpRequestException("AeroLink no respondió a tiempo.", ex);
         }
+
+        // 404: AeroLink no conoce ese ticket. No es una falla de AeroLink: el ticket no es válido.
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+
+        // Cualquier otro error (401, 500...) sí es una falla de la integración: lanza HttpRequestException.
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ValidacionTicketAeroLinkDto>();
     }
 }

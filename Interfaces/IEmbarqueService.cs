@@ -4,6 +4,6 @@ namespace PortHub.API.Interfaces;
 
 public interface IEmbarqueService
 {
-    Task<EmbarqueResponseDto?> RegistrarAsync(RegistroEmbarqueDto dto); // null = ticket inválido
+    Task<ResultadoRegistroEmbarque> RegistrarAsync(RegistroEmbarqueDto dto);
     Task<List<EmbarqueResponseDto>> ObtenerTrazabilidadAsync(string? gate);
 }
