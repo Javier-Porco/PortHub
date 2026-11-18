@@ -38,3 +38,18 @@ public class CancelacionSlotDto
     [Required]
     public string CodigoVuelo { get; set; } = string.Empty;
 }
+
+// Posibles resultados de intentar confirmar un slot.
+public enum EstadoConfirmacionSlot
+{
+    Confirmado,
+    NoEncontrado,
+    YaConfirmado,
+    SlotLiberado
+}
+
+public class ResultadoConfirmacionSlot
+{
+    public EstadoConfirmacionSlot Estado { get; set; }
+    public SlotResponseDto? Slot { get; set; }
+}

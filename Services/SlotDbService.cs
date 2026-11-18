@@ -6,9 +6,10 @@ using PortHub.API.Models;
 
 namespace PortHub.API.Services;
 
-public class SlotDbService(PortHubDbContext context) : ISlotService
+public class SlotDbService(PortHubDbContext context, IAeroLinkService aeroLink) : ISlotService
 {
     private readonly PortHubDbContext _context = context;
+    private readonly IAeroLinkService _aeroLink = aeroLink;
 
     public async Task<bool> EstaDisponibleAsync(int pista, DateTime horario)
     {
@@ -62,6 +63,39 @@ public class SlotDbService(PortHubDbContext context) : ISlotService
             .Where(s => s.Estado != EstadoSlot.Liberado)
             .ToListAsync();
         return slots.Select(ADto).ToList();
+    }
+
+    public async Task<ResultadoConfirmacionSlot> ConfirmarAsync(Guid slotId)
+    {
+        var slot = await _context.Slots.FindAsync(slotId);
+
+        if (slot == null)
+            return new() { Estado = EstadoConfirmacionSlot.NoEncontrado };
+        if (slot.Estado == EstadoSlot.Liberado)
+            return new() { Estado = EstadoConfirmacionSlot.SlotLiberado, Slot = ADto(slot) };
+        if (slot.Estado == EstadoSlot.Confirmado)
+            return new() { Estado = EstadoConfirmacionSlot.YaConfirmado, Slot = ADto(slot) };
+
+        // 1. PRIMERO se confirma y se GUARDA en la base. AeroLink, al recibir el aviso,
+        //    consulta GET /api/slots?codigoVuelo=... y tiene que ver el slot "confirmado".
+        slot.Estado = EstadoSlot.Confirmado;
+        await _context.SaveChangesAsync();
+
+        try
+        {
+            // 2. Después se avisa a AeroLink.
+            await _aeroLink.NotificarConfirmacionAsync(ADto(slot));
+        }
+        catch (HttpRequestException)
+        {
+            // 3. AeroLink no lo aceptó o no respondió: se deshace la confirmación,
+            //    para que los dos sistemas no queden distintos. El controller responde el error.
+            slot.Estado = EstadoSlot.Reservado;
+            await _context.SaveChangesAsync();
+            throw;
+        }
+
+        return new() { Estado = EstadoConfirmacionSlot.Confirmado, Slot = ADto(slot) };
     }
 
     private static SlotResponseDto ADto(Slot s) => new()

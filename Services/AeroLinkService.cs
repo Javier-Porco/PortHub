@@ -34,4 +34,22 @@ public class AeroLinkService(HttpClient http) : IAeroLinkService
 
         return await response.Content.ReadFromJsonAsync<ValidacionTicketAeroLinkDto>();
     }
+
+    public async Task NotificarConfirmacionAsync(SlotResponseDto slot)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            // Manda el slot como JSON: { slotId, codigoVuelo, estado, ... }.
+            // AeroLink usa slotId, codigoVuelo y estado; los otros campos los ignora.
+            response = await _http.PostAsJsonAsync("api/aeropuerto/callbacks/slots", slot);
+        }
+        catch (TaskCanceledException ex)
+        {
+            throw new HttpRequestException("AeroLink no respondió a tiempo.", ex);
+        }
+
+        // Si AeroLink no respondió 2xx, lanza HttpRequestException (con el StatusCode adentro).
+        response.EnsureSuccessStatusCode();
+    }
 }

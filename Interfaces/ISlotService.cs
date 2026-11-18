@@ -9,4 +9,5 @@ public interface ISlotService
     Task<SlotResponseDto?> LiberarAsync(string codigoVuelo);       // null = no había slot activo
     Task<SlotResponseDto?> ObtenerPorCodigoVueloAsync(string codigoVuelo);
     Task<List<SlotResponseDto>> ObtenerActivosAsync();
+    Task<ResultadoConfirmacionSlot> ConfirmarAsync(Guid slotId);
 }
