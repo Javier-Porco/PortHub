@@ -483,3 +483,4 @@ $RECYCLE.BIN/
 
 *.db-shm
 *.db-wal
+porthub.db

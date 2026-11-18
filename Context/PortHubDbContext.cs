@@ -25,6 +25,10 @@ public class PortHubDbContext : DbContext
             .IsUnique()
             .HasFilter("\"Estado\" <> 2");
 
+        // Se busca muy seguido por código de vuelo (AeroLink consulta GET /api/slots?codigoVuelo=...).
+        modelBuilder.Entity<Slot>()
+            .HasIndex(s => s.CodigoVuelo);
+
         // Fechas siempre en UTC: al guardar se pasan a UTC, y al leer se marcan como UTC (salen con "Z").
         modelBuilder.Entity<Slot>()
             .Property(s => s.HorarioProgramado)

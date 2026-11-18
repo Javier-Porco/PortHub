@@ -108,6 +108,8 @@ namespace PortHub.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CodigoVuelo");
+
                     b.HasIndex("Pista", "HorarioProgramado")
                         .IsUnique()
                         .HasFilter("\"Estado\" <> 2");

@@ -58,8 +58,11 @@ public class EmbarqueDbService(PortHubDbContext context, IAeroLinkService aeroLi
     public async Task<List<EmbarqueResponseDto>> ObtenerTrazabilidadAsync(string? gate)
     {
         var query = _context.Embarques.AsQueryable();
-        if (!string.IsNullOrEmpty(gate))
-            query = query.Where(e => e.Gate == gate);
+        if (!string.IsNullOrWhiteSpace(gate))
+        {
+            var gateBuscado = gate.Trim().ToUpper();
+            query = query.Where(e => e.Gate == gateBuscado);
+        }
 
         return await query
             .OrderByDescending(e => e.HorarioAcceso)
