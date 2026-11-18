@@ -50,7 +50,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.OpenApiSecurityScheme
     {
-        Description = "Ingresá la clave. Ejemplo: ApiKey PortHubSecretKey2026",
+        Description = "Escribí la palabra ApiKey, un espacio y la clave del archivo .env",
         Name = "Authorization",
         In = Microsoft.OpenApi.ParameterLocation.Header,
         Type = Microsoft.OpenApi.SecuritySchemeType.ApiKey
