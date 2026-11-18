@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PortHub.API.DTOs;
 using PortHub.API.Interfaces;
 using PortHub.API.Filters;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace PortHub.API.Controllers;
@@ -21,27 +22,50 @@ public class SlotsController : ControllerBase
     }
 
     [HttpGet("disponibilidad")]
-    public async Task<IActionResult> ConsultarDisponibilidad([FromQuery] int pista, [FromQuery] DateTime horario)
+    public async Task<IActionResult> ConsultarDisponibilidad([FromQuery, Required, Range(1, 10)] int? pista, [FromQuery, Required] DateTime? horario)
     {
-        var disponible = await _slotService.EstaDisponibleAsync(pista, horario);
-        return Ok(new { disponible, pista, horario });
+        var disponible = await _slotService.EstaDisponibleAsync(pista!.Value, horario!.Value);
+        return Ok(new { disponible, pista = pista.Value, horario = horario.Value });
     }
 
     [HttpPost("solicitudes")]
     public async Task<ActionResult<SlotResponseDto>> SolicitarSlot(SolicitudSlotDto dto)
     {
-        if (!await _slotService.EstaDisponibleAsync(dto.Pista, dto.HorarioProgramado))
-        {
-            return Conflict(new ErrorResponseDto
-            {
-                Code = "SLOT_OCCUPIED",
-                Message = "La pista ya se encuentra ocupada para el horario solicitado.",
-                Details = $"Pista {dto.Pista} ocupada a las {dto.HorarioProgramado:yyyy-MM-dd HH:mm:ss} UTC"
-            });
-        }
+        var resultado = await _slotService.ReservarAsync(dto);
 
-        var slot = await _slotService.ReservarAsync(dto);
-        return CreatedAtAction(nameof(GetByCodigoVuelo), new { codigoVuelo = slot.CodigoVuelo }, slot);
+        switch (resultado.Estado)
+        {
+            case EstadoReservaSlot.HorarioPasado:
+                return UnprocessableEntity(new ErrorResponseDto
+                {
+                    Code = "HORARIO_PASADO",
+                    Message = "El horario solicitado ya pasó. Solo se pueden reservar slots a futuro.",
+                    Details = resultado.Detalle
+                });
+            case EstadoReservaSlot.AerolineaNoExiste:
+                return UnprocessableEntity(new ErrorResponseDto
+                {
+                    Code = "AEROLINEA_NO_EXISTE",
+                    Message = "La aerolínea no está registrada en el aeropuerto.",
+                    Details = resultado.Detalle
+                });
+            case EstadoReservaSlot.VueloConSlotActivo:
+                return Conflict(new ErrorResponseDto
+                {
+                    Code = "VUELO_CON_SLOT_ACTIVO",
+                    Message = "El vuelo ya tiene un slot activo. Cancele ese slot antes de pedir otro.",
+                    Details = resultado.Detalle
+                });
+            case EstadoReservaSlot.PistaOcupada:
+            case EstadoReservaSlot.GateOcupado:
+                return Conflict(new ErrorResponseDto
+                {
+                    Code = "SLOT_OCCUPIED",
+                    Message = "La pista o gate no se encuentra disponible para el horario solicitado.",
+                    Details = resultado.Detalle
+                });
+        }
+        return CreatedAtAction(nameof(GetByCodigoVuelo), new { codigoVuelo = resultado.Slot!.CodigoVuelo }, resultado.Slot);
     }
 
     [HttpPost("cancelaciones")]
