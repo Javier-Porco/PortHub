@@ -297,11 +297,27 @@
     </main>
 
     <script>
-        const API_KEY = "PortHubSecretKey2026";
+        // La clave NO se escribe en este archivo: cualquiera que abra la página podría leerla.
+        // Se pide una vez y se guarda solo en esta pestaña (se borra al cerrarla).
+        let API_KEY = sessionStorage.getItem("porthubApiKey");
+        if (!API_KEY) {
+            API_KEY = prompt("Ingresá la API key de PortHub (la del archivo .env):") || "";
+            sessionStorage.setItem("porthubApiKey", API_KEY);
+        }
         const HEADERS = {
             "Authorization": `ApiKey ${API_KEY}`,
             "Content-Type": "application/json"
         };
+
+        // Convierte < > & " ' en texto inofensivo, para que un dato guardado nunca se ejecute como código.
+        function escapar(valor) {
+            return String(valor ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
 
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -313,12 +329,17 @@
 
         function log(msg) {
             const consoleBox = document.getElementById("console-log");
-            consoleBox.innerHTML = `> ${new Date().toLocaleTimeString()} - ${msg}<br>` + consoleBox.innerHTML;
+            consoleBox.innerHTML = `> ${new Date().toLocaleTimeString()} - ${escapar(msg)}<br>` + consoleBox.innerHTML;
         }
 
         async function cargarSlots() {
             try {
                 const res = await fetch('/api/Vuelos', { headers: HEADERS });
+                if (res.status === 401) {
+                    sessionStorage.removeItem("porthubApiKey");
+                    log("Clave incorrecta. Recargá la página (F5) y escribila de nuevo.");
+                    return;
+                }
                 if(!res.ok) throw new Error("Error obteniendo vuelos");
                 const data = await res.json();
                 
@@ -333,8 +354,9 @@
                 } else {
                     data.forEach(s => {
                         const esReservado = s.estadoSlot.toLowerCase() === 'reservado' || s.estadoSlot.toLowerCase() === 'confirmado';
+                        // El código de vuelo va en data-vuelo (escapado), no metido adentro del onclick.
                         const botonAccion = esReservado 
-                            ? `<button class="btn-cancel" onclick="cancelarSlot('${s.codigoVuelo}')">❌ Liberar</button>`
+                            ? `<button class="btn-cancel" data-vuelo="${escapar(s.codigoVuelo)}" onclick="cancelarSlot(this.dataset.vuelo)">❌ Liberar</button>`
                             : `<span style="color: var(--muted); font-size: 11px;">-</span>`;
 
                         if(gatesState.hasOwnProperty(s.gateAsignado)) {
@@ -343,12 +365,12 @@
 
                         tbody.innerHTML += `
                             <tr>
-                                <td><strong>${s.codigoVuelo}</strong></td>
-                                <td>${s.codigoAerolinea}</td>
-                                <td>Pista ${s.pistaAsignada}</td>
-                                <td>${s.gateAsignado}</td>
+                                <td><strong>${escapar(s.codigoVuelo)}</strong></td>
+                                <td>${escapar(s.codigoAerolinea)}</td>
+                                <td>Pista ${escapar(s.pistaAsignada)}</td>
+                                <td>${escapar(s.gateAsignado)}</td>
                                 <td>${new Date(s.horarioProgramado).toLocaleString()}</td>
-                                <td><span class="tag tag-${s.estadoSlot}">${s.estadoSlot}</span></td>
+                                <td><span class="tag tag-${escapar(s.estadoSlot)}">${escapar(s.estadoSlot)}</span></td>
                                 <td>${botonAccion}</td>
                             </tr>
                         `;
@@ -377,8 +399,8 @@
 
                 container.innerHTML += `
                     <div class="gate-node ${statusClass}">
-                        <div class="gate-title">🛫 ${gate}</div>
-                        <div class="gate-info">${text}</div>
+                        <div class="gate-title">🛫 ${escapar(gate)}</div>
+                        <div class="gate-info">${escapar(text)}</div>
                     </div>
                 `;
             });
@@ -441,11 +463,11 @@
                 data.forEach(a => {
                     tbody.innerHTML += `
                         <tr>
-                            <td>${a.id}</td>
-                            <td><strong>${a.codigo}</strong></td>
-                            <td>${a.nombre}</td>
-                            <td>${a.pais}</td>
-                            <td><code>${a.direccionBase}</code></td>
+                            <td>${escapar(a.id)}</td>
+                            <td><strong>${escapar(a.codigo)}</strong></td>
+                            <td>${escapar(a.nombre)}</td>
+                            <td>${escapar(a.pais)}</td>
+                            <td><code>${escapar(a.direccionBase)}</code></td>
                         </tr>
                     `;
                 });
@@ -472,16 +494,16 @@
         async function verificarDisponibilidad() {
             const pista = document.getElementById("disp-pista").value;
             const horario = new Date(document.getElementById("disp-horario").value).toISOString();
-            const res = await fetch(`/api/Slots/disponibilidad?pista=${pista}&horario=${horario}`, { headers: HEADERS });
+            const res = await fetch(`/api/Slots/disponibilidad?pista=${encodeURIComponent(pista)}&horario=${horario}`, { headers: HEADERS });
             const data = await res.json();
             
             const div = document.getElementById("disp-resultado");
             if (data.disponible) {
                 div.style.color = "var(--success)";
-                div.innerHTML = `✅ Pista ${pista} DISPONIBLE para ${new Date(horario).toLocaleString()}`;
+                div.innerHTML = `✅ Pista ${escapar(pista)} DISPONIBLE para ${new Date(horario).toLocaleString()}`;
             } else {
                 div.style.color = "var(--danger)";
-                div.innerHTML = `❌ Pista ${pista} OCUPADA para esa hora`;
+                div.innerHTML = `❌ Pista ${escapar(pista)} OCUPADA para esa hora`;
             }
         }
 
