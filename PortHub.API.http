@@ -1,6 +1,121 @@
-@PortHub.API_HostAddress = http://localhost:5157
+# Pedidos de ejemplo para PortHub. Se ejecutan desde Visual Studio, Rider
+# o VS Code (se tienen que descargar la extensión "REST Client"): aparece "Send Request" arriba de cada uno.
+#
+# IMPORTANTE: reemplazá PEGAR_CLAVE_ACA por la clave de tu .env solo mientras probás,
+# y volvé a dejar PEGAR_CLAVE_ACA antes de hacer commit. La clave no va a git.
 
-GET {{PortHub.API_HostAddress}}/weatherforecast/
-Accept: application/json
+@host = http://localhost:5157
+@apiKey = PEGAR_CLAVE_ACA
 
-###
+### ---------- AEROLÍNEAS ----------
+
+### Listar aerolíneas
+GET {{host}}/api/aerolineas
+Authorization: ApiKey {{apiKey}}
+
+### Traer una aerolínea por id
+GET {{host}}/api/aerolineas/1
+Authorization: ApiKey {{apiKey}}
+
+### Registrar una aerolínea (201, o 409 si el código ya existe)
+POST {{host}}/api/aerolineas
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Aerolineas Argentinas",
+  "codigo": "ARG",
+  "pais": "Argentina",
+  "direccionBase": "http://localhost:5099"
+}
+
+### Modificar una aerolínea (204)
+PUT {{host}}/api/aerolineas/1
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "nombre": "Aerolineas Argentinas S.A.",
+  "pais": "Argentina",
+  "direccionBase": "http://localhost:5099"
+}
+
+### ---------- SLOTS ----------
+
+### Consultar disponibilidad de una pista
+GET {{host}}/api/slots/disponibilidad?pista=1&horario=2026-12-01T14:00:00Z
+Authorization: ApiKey {{apiKey}}
+
+### Pedir un slot (201)
+POST {{host}}/api/slots/solicitudes
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "codigoVuelo": "AR100",
+  "codigoAerolinea": "ARG",
+  "horarioProgramado": "2026-12-01T14:00:00Z",
+  "pista": 1,
+  "gate": "G01"
+}
+
+### Pedir la misma pista 30 minutos después (409 SLOT_OCCUPIED)
+POST {{host}}/api/slots/solicitudes
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "codigoVuelo": "AR101",
+  "codigoAerolinea": "ARG",
+  "horarioProgramado": "2026-12-01T14:30:00Z",
+  "pista": 1,
+  "gate": "G02"
+}
+
+### Consultar el slot de un vuelo (copiá el "slotId" de la respuesta para confirmar)
+GET {{host}}/api/slots?codigoVuelo=AR100
+Authorization: ApiKey {{apiKey}}
+
+### Confirmar un slot y avisar a AeroLink (reemplazá el GUID por el slotId real)
+PATCH {{host}}/api/slots/00000000-0000-0000-0000-000000000000/confirmacion
+Authorization: ApiKey {{apiKey}}
+
+### Cancelar el slot de un vuelo (200)
+POST {{host}}/api/slots/cancelaciones
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "codigoVuelo": "AR100"
+}
+
+### ---------- EMBARQUES ----------
+
+### Registrar el acceso de un pasajero (valida el ticket con AeroLink)
+POST {{host}}/api/embarques
+Authorization: ApiKey {{apiKey}}
+Content-Type: application/json
+
+{
+  "numeroTicket": "TCK-001",
+  "gate": "G01"
+}
+
+### Trazabilidad de accesos de un gate
+GET {{host}}/api/embarques?gate=G01
+Authorization: ApiKey {{apiKey}}
+
+### ---------- VUELOS ----------
+
+### Vuelos con slot activo
+GET {{host}}/api/vuelos
+Authorization: ApiKey {{apiKey}}
+
+### ---------- ERRORES ----------
+
+### Sin API Key (401)
+GET {{host}}/api/vuelos
+
+### Ruta que no existe (404)
+GET {{host}}/api/noexiste
+Authorization: ApiKey {{apiKey}}

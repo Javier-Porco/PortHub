@@ -34,6 +34,11 @@ public class PortHubDbContext : DbContext
         modelBuilder.Entity<Embarque>()
             .HasIndex(e => e.NumeroTicket)
             .IsUnique();
+
+        // Igual que en los slots: la hora de acceso se lee como UTC (sale con "Z").
+        modelBuilder.Entity<Embarque>()
+            .Property(e => e.HorarioAcceso)
+            .HasConversion(v => v.ToUniversalTime(), v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
     }
     public DbSet<Embarque> Embarques => Set<Embarque>();
 }
