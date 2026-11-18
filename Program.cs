@@ -63,7 +63,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddScoped<IEmbarqueService, EmbarqueDbService>();
-builder.Services.AddHttpClient<IAeroLinkService, AeroLinkService>();
+builder.Services.AddScoped<IAerolineaService, AerolineaDbService>();
 
 var app = builder.Build();
 
