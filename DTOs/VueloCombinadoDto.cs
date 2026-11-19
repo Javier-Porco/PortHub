@@ -1,6 +1,3 @@
-using PortHub.API.Models;
-using System.Text.Json.Serialization;
-
 namespace PortHub.API.DTOs;
 
 // Modelo para deserializar cada item de GET /api/vuelos de AeroLink
@@ -13,8 +10,6 @@ public class VueloAeroLinkDto
     public DateTime HorarioSalida { get; set; }
     public DateTime HorarioLlegada { get; set; }
     public string Aeronave { get; set; } = string.Empty;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public string? Estado { get; set; }
 }
 
