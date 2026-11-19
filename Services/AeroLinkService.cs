@@ -52,4 +52,26 @@ public class AeroLinkService(HttpClient http) : IAeroLinkService
         // Si AeroLink no respondió 2xx, lanza HttpRequestException (con el StatusCode adentro).
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<List<VueloAeroLinkDto>> ObtenerVuelosAsync()
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await _http.GetAsync("api/vuelos");
+        }
+        catch (TaskCanceledException ex)
+        {
+            throw new HttpRequestException("AeroLink no respondió a tiempo.", ex);
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var vuelos = await response.Content.ReadFromJsonAsync<List<VueloAeroLinkDto>>();
+        return vuelos ?? [];
+    }
+
 }
+
+
+
