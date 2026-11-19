@@ -5,114 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PortHub - Airport Control Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #080c14;
-            --card-bg: #121824;
-            --border: #1e293b;
-            --accent: #00f2fe;
-            --primary: #38bdf8;
-            --text: #f8fafc;
-            --muted: #64748b;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-dark); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-
-        /* Sidebar Navigation */
-        aside {
-            width: 240px; background: #0c101d; border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 20px 15px; gap: 20px;
-        }
-        .brand { font-size: 20px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .brand span { color: var(--accent); }
-        
-        .menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .menu li {
-            padding: 10px 14px; border-radius: 8px; color: var(--muted); cursor: pointer;
-            font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; transition: all 0.2s;
-        }
-        .menu li.active, .menu li:hover { background: rgba(56, 189, 248, 0.1); color: var(--primary); }
-
-        /* Main Content Area */
-        main { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-
-        /* Top Status Header */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--card-bg); border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px;
-        }
-        .status-pill {
-            background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 5px 12px;
-            border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--success);
-        }
-
-        /* Grid Layout */
-        .layout-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; }
-        
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-        .card-header { font-size: 15px; font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
-
-        .tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .tag-reservado { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .tag-confirmado { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .tag-liberado { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-
-        .btn-cancel {
-            background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger);
-            padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; width: auto;
-        }
-        .btn-cancel:hover { background: var(--danger); color: #fff; }
-
-        /* Form Controls */
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-        input, select {
-            width: 100%; padding: 8px 10px; background: #080c14; border: 1px solid var(--border);
-            border-radius: 6px; color: #fff; font-size: 13px; outline: none;
-        }
-        input:focus, select:focus { border-color: var(--primary); }
-
-        button.btn-primary {
-            width: 100%; padding: 10px; background: linear-gradient(135deg, var(--primary), var(--accent));
-            border: none; border-radius: 6px; color: #000; font-weight: 700; cursor: pointer; transition: 0.2s;
-        }
-        button.btn-primary:hover { opacity: 0.9; }
-
-        /* Terminal Logs */
-        .terminal {
-            background: #05080e; border: 1px solid var(--border); border-radius: 8px; padding: 10px;
-            font-family: monospace; font-size: 11px; color: var(--accent); max-height: 140px; overflow-y: auto;
-        }
-
-        /* 2D Interactive Map */
-        .gate-map {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #080c14;
-            padding: 15px; border-radius: 8px; border: 1px solid var(--border);
-        }
-        .gate-node {
-            background: var(--card-bg); border: 1px solid var(--border); padding: 12px 8px; border-radius: 8px;
-            text-align: center; transition: 0.3s;
-        }
-        .gate-node.available { border-color: var(--success); }
-        .gate-node.occupied { border-color: var(--warning); background: rgba(245, 158, 11, 0.1); }
-        .gate-node.released { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-        .gate-title { font-size: 14px; font-weight: 700; }
-        .gate-info { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-        /* Tabs handling */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-    </style>
+    <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 
@@ -127,19 +20,19 @@
 
     <main>
         <header>
-            <div style="font-size: 13px; font-weight: 600; color: var(--muted);">PortHub Airport Management System • <span style="color:#fff;" id="current-time">--:--</span></div>
+            <div class="header-title">PortHub Airport Management System • <span id="current-time">--:--</span></div>
             <div class="status-pill">● API Conectada (ApiKey Activa)</div>
         </header>
 
         <!-- TAB 1: OVERVIEW COMPLETO CON MAPA Y EMBARQUES -->
         <div id="tab-overview" class="tab-content active">
             <div class="layout-grid">
-                <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="column-stack">
                     <!-- Tabla Principal -->
                     <div class="card">
                         <div class="card-header">
                             <span>📡 Salidas y Slots en Tiempo Real</span>
-                            <button onclick="cargarSlots()" style="width:auto; padding:4px 10px; font-size:11px;" class="btn-primary">🔄 Actualizar</button>
+                            <button onclick="cargarSlots()" class="btn-primary btn-refresh">🔄 Actualizar</button>
                         </div>
                         <table>
                             <thead>
@@ -154,7 +47,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabla-slots">
-                                <tr><td colspan="7" style="text-align:center;">Cargando vuelos...</td></tr>
+                                <tr><td colspan="7" class="text-center">Cargando vuelos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -162,12 +55,12 @@
                     <!-- Escáner de Embarque -->
                     <div class="card">
                         <div class="card-header">🎟️ Escáner & Validación de Ticket de Embarque</div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 10px; align-items: end;">
-                            <div class="form-group" style="margin:0;">
+                        <div class="scanner-grid">
+                            <div class="form-group no-margin">
                                 <label>Número de Ticket</label>
                                 <input type="text" id="emb-ticket" placeholder="Ej: TCK-OK-123">
                             </div>
-                            <div class="form-group" style="margin:0;">
+                            <div class="form-group no-margin">
                                 <label>Gate de Embarque</label>
                                 <input type="text" id="emb-gate" value="G01">
                             </div>
@@ -176,7 +69,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="column-stack">
                     <!-- Mapa 2D de Gates -->
                     <div class="card">
                         <div class="card-header">🗺️ Mapa Interactivo de Gates (2D)</div>
@@ -245,7 +138,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-aerolineas">
-                            <tr><td colspan="5" style="text-align:center;">Cargando aerolíneas...</td></tr>
+                            <tr><td colspan="5" class="text-center">Cargando aerolíneas...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -277,7 +170,7 @@
 
         <!-- TAB 3: DISPONIBILIDAD -->
         <div id="tab-disponibilidad" class="tab-content">
-            <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="card card-centered">
                 <div class="card-header">🔍 Consultar Disponibilidad de Pista</div>
                 <div class="form-row">
                     <div>
@@ -290,230 +183,12 @@
                     </div>
                 </div>
                 <button class="btn-primary" onclick="verificarDisponibilidad()">Verificar en Sistema</button>
-                <div id="disp-resultado" style="margin-top: 15px; font-size: 14px; font-weight: 600; text-align: center;"></div>
+                <div id="disp-resultado" class="disp-result"></div>
             </div>
         </div>
 
     </main>
 
-    <script>
-        // La clave NO se escribe en este archivo: cualquiera que abra la página podría leerla.
-        // Se pide una vez y se guarda solo en esta pestaña (se borra al cerrarla).
-        let API_KEY = sessionStorage.getItem("porthubApiKey");
-        if (!API_KEY) {
-            API_KEY = prompt("Ingresá la API key de PortHub (la del archivo .env):") || "";
-            sessionStorage.setItem("porthubApiKey", API_KEY);
-        }
-        const HEADERS = {
-            "Authorization": `ApiKey ${API_KEY}`,
-            "Content-Type": "application/json"
-        };
-
-        // Convierte < > & " ' en texto inofensivo, para que un dato guardado nunca se ejecute como código.
-        function escapar(valor) {
-            return String(valor ?? "")
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#39;");
-        }
-
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.menu li').forEach(m => m.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            el.classList.add('active');
-            if(tabId === 'tab-aerolineas') cargarAerolineas();
-        }
-
-        function log(msg) {
-            const consoleBox = document.getElementById("console-log");
-            consoleBox.innerHTML = `> ${new Date().toLocaleTimeString()} - ${escapar(msg)}<br>` + consoleBox.innerHTML;
-        }
-
-        async function cargarSlots() {
-            try {
-                const res = await fetch('/api/Vuelos', { headers: HEADERS });
-                if (res.status === 401) {
-                    sessionStorage.removeItem("porthubApiKey");
-                    log("Clave incorrecta. Recargá la página (F5) y escribila de nuevo.");
-                    return;
-                }
-                if(!res.ok) throw new Error("Error obteniendo vuelos");
-                const data = await res.json();
-                
-                const tbody = document.getElementById("tabla-slots");
-                tbody.innerHTML = "";
-                
-                // Mapear mapa de gates
-                const gatesState = { "G01": null, "G02": null, "G03": null, "G04": null };
-
-                if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--muted);">No hay slots registrados.</td></tr>`;
-                } else {
-                    data.forEach(s => {
-                        const esReservado = s.estadoSlot.toLowerCase() === 'reservado' || s.estadoSlot.toLowerCase() === 'confirmado';
-                        // El código de vuelo va en data-vuelo (escapado), no metido adentro del onclick.
-                        const botonAccion = esReservado 
-                            ? `<button class="btn-cancel" data-vuelo="${escapar(s.codigoVuelo)}" onclick="cancelarSlot(this.dataset.vuelo)">❌ Liberar</button>`
-                            : `<span style="color: var(--muted); font-size: 11px;">-</span>`;
-
-                        if(gatesState.hasOwnProperty(s.gateAsignado)) {
-                            gatesState[s.gateAsignado] = { vuelo: s.codigoVuelo, estado: s.estadoSlot.toLowerCase() };
-                        }
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><strong>${escapar(s.codigoVuelo)}</strong></td>
-                                <td>${escapar(s.codigoAerolinea)}</td>
-                                <td>Pista ${escapar(s.pistaAsignada)}</td>
-                                <td>${escapar(s.gateAsignado)}</td>
-                                <td>${new Date(s.horarioProgramado).toLocaleString()}</td>
-                                <td><span class="tag tag-${escapar(s.estadoSlot)}">${escapar(s.estadoSlot)}</span></td>
-                                <td>${botonAccion}</td>
-                            </tr>
-                        `;
-                    });
-                }
-                
-                renderGateMap(gatesState);
-                log("Slots y mapa 2D actualizados.");
-            } catch (err) {
-                log(`Error: ${err.message}`);
-            }
-        }
-
-        function renderGateMap(gatesState) {
-            const container = document.getElementById("gate-map-container");
-            container.innerHTML = "";
-            Object.keys(gatesState).forEach(gate => {
-                const info = gatesState[gate];
-                let statusClass = "available";
-                let text = "LIBRE";
-
-                if (info) {
-                    statusClass = info.estado === 'liberado' ? 'released' : 'occupied';
-                    text = `${info.vuelo} (${info.estado.toUpperCase()})`;
-                }
-
-                container.innerHTML += `
-                    <div class="gate-node ${statusClass}">
-                        <div class="gate-title">🛫 ${escapar(gate)}</div>
-                        <div class="gate-info">${escapar(text)}</div>
-                    </div>
-                `;
-            });
-        }
-
-        async function reservarSlot() {
-            const body = {
-                codigoVuelo: document.getElementById("slot-vuelo").value,
-                codigoAerolinea: document.getElementById("slot-aerolinea").value,
-                pista: parseInt(document.getElementById("slot-pista").value),
-                gate: document.getElementById("slot-gate").value,
-                horarioProgramado: new Date(document.getElementById("slot-horario").value).toISOString()
-            };
-
-            const res = await fetch('/api/Slots/solicitudes', { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
-            const data = await res.json();
-
-            if (res.status === 201) {
-                log(`✅ Slot Reservado con éxito para vuelo ${data.codigoVuelo}`);
-                cargarSlots();
-            } else {
-                log(`❌ Conflict (${res.status}): ${data.message}`);
-            }
-        }
-
-        async function cancelarSlot(codigoVuelo) {
-            const res = await fetch('/api/Slots/cancelaciones', {
-                method: 'POST', headers: HEADERS, body: JSON.stringify({ codigoVuelo: codigoVuelo })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                log(`🚫 Slot liberado: ${codigoVuelo}`);
-                cargarSlots();
-            } else {
-                log(`❌ Error al liberar: ${data.message}`);
-            }
-        }
-
-        async function validarEmbarque() {
-            const body = {
-                numeroTicket: document.getElementById("emb-ticket").value,
-                gate: document.getElementById("emb-gate").value
-            };
-            const res = await fetch('/api/Embarques', { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
-            const data = await res.json();
-
-            if (res.status === 201) {
-                log(`🎉 ACCESO AUTORIZADO! Ticket: ${data.numeroTicket} en Gate ${data.gate}`);
-            } else {
-                log(`🚫 ACCESO RECHAZADO: ${data.message}`);
-            }
-        }
-
-        async function cargarAerolineas() {
-            try {
-                const res = await fetch('/api/Aerolineas', { headers: HEADERS });
-                const data = await res.json();
-                const tbody = document.getElementById("tabla-aerolineas");
-                tbody.innerHTML = "";
-                data.forEach(a => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${escapar(a.id)}</td>
-                            <td><strong>${escapar(a.codigo)}</strong></td>
-                            <td>${escapar(a.nombre)}</td>
-                            <td>${escapar(a.pais)}</td>
-                            <td><code>${escapar(a.direccionBase)}</code></td>
-                        </tr>
-                    `;
-                });
-            } catch(e) { log(`Error aerolineas: ${e.message}`); }
-        }
-
-        async function crearAerolinea() {
-            const body = {
-                nombre: document.getElementById("aero-nombre").value,
-                codigo: document.getElementById("aero-codigo").value,
-                pais: document.getElementById("aero-pais").value,
-                direccionBase: document.getElementById("aero-url").value
-            };
-            const res = await fetch('/api/Aerolineas', { method: 'POST', headers: HEADERS, body: JSON.stringify(body) });
-            if (res.status === 201) {
-                log(`🏢 Aerolínea ${body.codigo} creada correctamente.`);
-                cargarAerolineas();
-            } else {
-                const err = await res.json();
-                log(`❌ Error: ${err.message}`);
-            }
-        }
-
-        async function verificarDisponibilidad() {
-            const pista = document.getElementById("disp-pista").value;
-            const horario = new Date(document.getElementById("disp-horario").value).toISOString();
-            const res = await fetch(`/api/Slots/disponibilidad?pista=${encodeURIComponent(pista)}&horario=${horario}`, { headers: HEADERS });
-            const data = await res.json();
-            
-            const div = document.getElementById("disp-resultado");
-            if (data.disponible) {
-                div.style.color = "var(--success)";
-                div.innerHTML = `✅ Pista ${escapar(pista)} DISPONIBLE para ${new Date(horario).toLocaleString()}`;
-            } else {
-                div.style.color = "var(--danger)";
-                div.innerHTML = `❌ Pista ${escapar(pista)} OCUPADA para esa hora`;
-            }
-        }
-
-        // Init defaults
-        const now = new Date();
-        document.getElementById('slot-horario').value = now.toISOString().slice(0, 16);
-        document.getElementById('disp-horario').value = now.toISOString().slice(0, 16);
-        setInterval(() => { document.getElementById('current-time').innerText = new Date().toLocaleTimeString(); }, 1000);
-        
-        cargarSlots();
-    </script>
+    <script src="./js/app.js"></script>
 </body>
 </html>
